@@ -43,14 +43,9 @@ export function LabeledEdge({
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: 'all',
           }}
-          className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md border bg-white ${
+         className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md border bg-card ${
             selected ? 'shadow-md ring-1' : 'shadow-sm'
           }`}
-          style-={{
-            color,
-            borderColor: `${color}40`,
-            ...(selected ? { ringColor: color } : {}),
-          }}
         >
           <span style={{ color }}>{relationType.replace(/_/g, ' ')}</span>
         </div>
