@@ -381,9 +381,6 @@ function InnerCanvas({
 }
 
 export function GraphCanvas(props: GraphCanvasProps) {
-  if (!props.graph) {
-    return <InnerCanvas {...props} />;
-  }
   return (
     <ReactFlowProvider>
       <InnerCanvas {...props} />
