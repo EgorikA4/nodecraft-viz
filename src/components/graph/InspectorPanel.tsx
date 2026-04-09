@@ -19,6 +19,7 @@ interface InspectorPanelProps {
   onUpdateEdge: (edge: GraphEdge) => void;
   onDeleteEdge: (id: string) => void;
   onDuplicateNode: (node: GraphNode) => void;
+  mobile?: boolean;
 }
 
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {

@@ -9,8 +9,13 @@ import {
   createNewGraph, createNode,
 } from '@/store/graph-store';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { PanelLeft, PanelRight } from 'lucide-react';
 
 const Index = () => {
+  const isMobile = useIsMobile();
   const [graphs, setGraphs] = useState<GraphDocument[]>(() => loadGraphs());
   const [activeGraphId, setActiveGraphId] = useState<string | null>('graph-acme');
   const [workingGraph, setWorkingGraph] = useState<GraphDocument | null>(null);
@@ -18,6 +23,10 @@ const Index = () => {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  // Mobile drawer states
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
 
   // Undo/redo
   const [history, setHistory] = useState<string[]>([]);
@@ -64,7 +73,10 @@ const Index = () => {
     setFuture([]);
   }, []);
 
-  const handleSelectGraph = useCallback((id: string) => setActiveGraphId(id), []);
+  const handleSelectGraph = useCallback((id: string) => {
+    setActiveGraphId(id);
+    setExplorerOpen(false);
+  }, []);
 
   const handleCreateGraph = useCallback(() => {
     const g = createNewGraph('Untitled Graph');
@@ -74,6 +86,7 @@ const Index = () => {
       return next;
     });
     setActiveGraphId(g.id);
+    setExplorerOpen(false);
     toast.success('Graph created');
   }, []);
 
@@ -147,8 +160,15 @@ const Index = () => {
     });
   }, [pushHistory]);
 
-  const handleNodeSelect = useCallback((node: GraphNode | null) => setSelectedNode(node), []);
-  const handleEdgeSelect = useCallback((edge: GraphEdge | null) => setSelectedEdge(edge), []);
+  const handleNodeSelect = useCallback((node: GraphNode | null) => {
+    setSelectedNode(node);
+    if (node && isMobile) setInspectorOpen(true);
+  }, [isMobile]);
+
+  const handleEdgeSelect = useCallback((edge: GraphEdge | null) => {
+    setSelectedEdge(edge);
+    if (edge && isMobile) setInspectorOpen(true);
+  }, [isMobile]);
 
   const handleUpdateNode = useCallback((updated: GraphNode) => {
     setSelectedNode(updated);
@@ -279,15 +299,60 @@ const Index = () => {
     input.click();
   }, []);
 
+  const explorerContent = (
+    <GraphExplorer
+      graphs={graphs}
+      activeGraphId={activeGraphId}
+      onSelectGraph={handleSelectGraph}
+      onCreateGraph={handleCreateGraph}
+      onDeleteGraph={handleDeleteGraph}
+      mobile={isMobile}
+    />
+  );
+
+  const inspectorContent = (
+    <InspectorPanel
+      selectedNode={selectedNode}
+      selectedEdge={selectedEdge}
+      nodes={workingGraph?.nodes || []}
+      onUpdateNode={handleUpdateNode}
+      onDeleteNode={handleDeleteNode}
+      onUpdateEdge={handleUpdateEdge}
+      onDeleteEdge={handleDeleteEdge}
+      onDuplicateNode={handleDuplicateNode}
+      mobile={isMobile}
+    />
+  );
+
   return (
     <div className="h-screen w-full flex bg-muted/30">
-      <GraphExplorer
-        graphs={graphs}
-        activeGraphId={activeGraphId}
-        onSelectGraph={handleSelectGraph}
-        onCreateGraph={handleCreateGraph}
-        onDeleteGraph={handleDeleteGraph}
-      />
+      {/* Desktop: inline sidebars */}
+      {!isMobile && explorerContent}
+
+      {/* Mobile: floating toggle buttons */}
+      {isMobile && (
+        <div className="fixed top-2 left-2 z-50 flex gap-1.5">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-9 w-9 rounded-lg shadow-md bg-card border border-border"
+            onClick={() => setExplorerOpen(true)}
+          >
+            <PanelLeft size={16} />
+          </Button>
+          {(selectedNode || selectedEdge) && (
+            <Button
+              variant="secondary"
+              size="icon"
+              className="h-9 w-9 rounded-lg shadow-md bg-card border border-border"
+              onClick={() => setInspectorOpen(true)}
+            >
+              <PanelRight size={16} />
+            </Button>
+          )}
+        </div>
+      )}
+
       <GraphCanvas
         graph={workingGraph}
         hasUnsavedChanges={hasUnsavedChanges}
@@ -308,17 +373,29 @@ const Index = () => {
         onImport={handleImport}
         onDuplicateGraph={handleDuplicateGraph}
         saveStatus={saveStatus}
+        mobile={isMobile}
       />
-      <InspectorPanel
-        selectedNode={selectedNode}
-        selectedEdge={selectedEdge}
-        nodes={workingGraph?.nodes || []}
-        onUpdateNode={handleUpdateNode}
-        onDeleteNode={handleDeleteNode}
-        onUpdateEdge={handleUpdateEdge}
-        onDeleteEdge={handleDeleteEdge}
-        onDuplicateNode={handleDuplicateNode}
-      />
+
+      {/* Desktop: inline inspector */}
+      {!isMobile && inspectorContent}
+
+      {/* Mobile: Explorer as left sheet */}
+      {isMobile && (
+        <Sheet open={explorerOpen} onOpenChange={setExplorerOpen}>
+          <SheetContent side="left" className="w-[300px] p-0">
+            {explorerContent}
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {/* Mobile: Inspector as bottom sheet */}
+      {isMobile && (
+        <Sheet open={inspectorOpen} onOpenChange={setInspectorOpen}>
+          <SheetContent side="bottom" className="h-[70vh] p-0 rounded-t-2xl">
+            {inspectorContent}
+          </SheetContent>
+        </Sheet>
+      )}
 
       <ConfirmDialog
         open={!!deleteConfirm}

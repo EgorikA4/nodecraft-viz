@@ -16,9 +16,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
-  Save, Plus, GitBranch, LayoutDashboard, ChevronDown, Search,
-  Download, Upload, Copy, Undo2, Redo2, BarChart3, Keyboard, Filter,
-  CheckCircle2, Loader2,
+  Save, Plus, LayoutDashboard, ChevronDown, Search,
+  Download, Upload, Copy, Undo2, Redo2, BarChart3, Keyboard, 
+  CheckCircle2, Loader2, MoreHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,14 +28,13 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { nodeTypes } from './OrgNode';
 import { edgeTypes } from './LabeledEdge';
-import { GraphDocument, GraphNode, GraphEdge, NODE_TYPES, NodeType, NODE_TYPE_CONFIG, RELATION_TYPES } from '@/types/graph';
+import { GraphDocument, GraphNode, GraphEdge, NODE_TYPES, NodeType, NODE_TYPE_CONFIG } from '@/types/graph';
 import { createNode, createEdge } from '@/store/graph-store';
 import { NodeSearchDialog } from './NodeSearchDialog';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { GraphStatsPanel } from './GraphStatsPanel';
 import { FilterBar } from './FilterBar';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface GraphCanvasProps {
   graph: GraphDocument | null;
@@ -57,6 +56,7 @@ interface GraphCanvasProps {
   onImport: () => void;
   onDuplicateGraph: () => void;
   saveStatus: 'idle' | 'saving' | 'saved';
+  mobile?: boolean;
 }
 
 function graphNodesToFlow(nodes: GraphNode[], hiddenTypes: Set<NodeType>): Node[] {
@@ -88,7 +88,7 @@ function InnerCanvas({
   onNodeSelect, onEdgeSelect, selectedNodeId, selectedEdgeId,
   onDuplicateNode, onDeleteNode,
   canUndo, canRedo, onUndo, onRedo,
-  onExport, onImport, onDuplicateGraph, saveStatus,
+  onExport, onImport, onDuplicateGraph, saveStatus, mobile,
 }: GraphCanvasProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -106,7 +106,6 @@ function InnerCanvas({
   const [nodes, setNodes, onNodesChange] = useNodesState(graph ? graphNodesToFlow(graph.nodes, hiddenTypes) : []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(graph ? graphEdgesToFlow(graph.edges, hiddenNodeIds) : []);
 
-  // Sync when graph changes
   if (graph && graph.id !== graphRef.current) {
     graphRef.current = graph.id;
     setHiddenTypes(new Set());
@@ -114,14 +113,12 @@ function InnerCanvas({
     setEdges(graphEdgesToFlow(graph.edges, new Set()));
   }
 
-  // Re-filter when hiddenTypes change
   useEffect(() => {
     if (!graph) return;
     setNodes(graphNodesToFlow(graph.nodes, hiddenTypes));
     setEdges(graphEdgesToFlow(graph.edges, hiddenNodeIds));
   }, [hiddenTypes, hiddenNodeIds]);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -208,20 +205,136 @@ function InnerCanvas({
 
   if (!graph) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-muted/30">
+      <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 px-6">
         <LayoutDashboard size={56} className="text-muted-foreground/20 mb-4" />
-        <h2 className="text-xl font-semibold text-muted-foreground/60 mb-1">No graph selected</h2>
-        <p className="text-sm text-muted-foreground/40 mb-4">Select or create a graph to begin editing</p>
-        <p className="text-xs text-muted-foreground/30">Press <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">?</kbd> for keyboard shortcuts</p>
+        <h2 className="text-xl font-semibold text-muted-foreground/60 mb-1 text-center">No graph selected</h2>
+        <p className="text-sm text-muted-foreground/40 mb-4 text-center">Select or create a graph to begin editing</p>
+        {!mobile && (
+          <p className="text-xs text-muted-foreground/30">Press <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">?</kbd> for keyboard shortcuts</p>
+        )}
       </div>
     );
   }
 
+  // Mobile toolbar
+  if (mobile) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Compact mobile toolbar */}
+        <div className="h-11 border-b border-border bg-card flex items-center px-12 gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {editingTitle ? (
+              <Input autoFocus defaultValue={graph.title}
+                className="h-7 text-sm font-semibold w-36"
+                onBlur={e => { onTitleChange(e.target.value); setEditingTitle(false); }}
+                onKeyDown={e => { if (e.key === 'Enter') { onTitleChange((e.target as HTMLInputElement).value); setEditingTitle(false); } }}
+              />
+            ) : (
+              <button onClick={() => setEditingTitle(true)} className="text-sm font-semibold text-foreground truncate max-w-[140px]">
+                {graph.title}
+              </button>
+            )}
+            {hasUnsavedChanges && <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />}
+            {saveStatus === 'saving' && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+            {saveStatus === 'saved' && <CheckCircle2 size={12} className="text-emerald-500" />}
+          </div>
+
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onSave}>
+            <Save size={15} />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Plus size={15} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {NODE_TYPES.map(t => (
+                <DropdownMenuItem key={t} onClick={() => handleAddNode(t)}>
+                  <span className="w-2 h-2 rounded-full mr-2" style={{ background: NODE_TYPE_CONFIG[t].color }} />
+                  {t}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFitView}>
+            <LayoutDashboard size={15} />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal size={15} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSearchOpen(true)} className="gap-2">
+                <Search size={14} /> Search Nodes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onUndo} disabled={!canUndo} className="gap-2">
+                <Undo2 size={14} /> Undo
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onRedo} disabled={!canRedo} className="gap-2">
+                <Redo2 size={14} /> Redo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onExport} className="gap-2">
+                <Download size={14} /> Export
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onImport} className="gap-2">
+                <Upload size={14} /> Import
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onDuplicateGraph} className="gap-2">
+                <Copy size={14} /> Duplicate Graph
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatsOpen(true)} className="gap-2">
+                <BarChart3 size={14} /> Statistics
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Canvas */}
+        <div className="flex-1 relative">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
+            onPaneClick={onPaneClick}
+            onNodeDragStop={onNodeDragStop}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            proOptions={{ hideAttribution: true }}
+            className="bg-muted/20"
+          >
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-40" />
+            <Controls className="!rounded-lg !border !border-border !shadow-sm" showInteractive={false} />
+          </ReactFlow>
+        </div>
+
+        <NodeSearchDialog open={searchOpen} onOpenChange={setSearchOpen} nodes={graph.nodes} onSelectNode={handleSearchSelect} />
+        <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
+          <SheetContent side="bottom" className="h-[60vh] p-0 rounded-t-2xl">
+            <SheetHeader className="p-4 border-b"><SheetTitle className="text-sm">Graph Overview</SheetTitle></SheetHeader>
+            <GraphStatsPanel graph={graph} />
+          </SheetContent>
+        </Sheet>
+      </div>
+    );
+  }
+
+  // Desktop toolbar
   return (
     <div className="flex-1 flex flex-col min-w-0">
-      {/* Toolbar */}
       <div className="h-12 border-b border-border bg-card flex items-center px-3 gap-1 shrink-0 overflow-x-auto">
-        {/* Title */}
         <div className="flex items-center gap-2 mr-2 min-w-0">
           {editingTitle ? (
             <Input autoFocus defaultValue={graph.title}
@@ -234,9 +347,7 @@ function InnerCanvas({
               {graph.title}
             </button>
           )}
-          {hasUnsavedChanges && (
-            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title="Unsaved changes" />
-          )}
+          {hasUnsavedChanges && <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title="Unsaved changes" />}
           {saveStatus === 'saving' && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
           {saveStatus === 'saved' && <CheckCircle2 size={12} className="text-emerald-500" />}
         </div>
@@ -327,7 +438,6 @@ function InnerCanvas({
         </div>
       </div>
 
-      {/* Canvas */}
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
@@ -358,21 +468,12 @@ function InnerCanvas({
         </ReactFlow>
       </div>
 
-      {/* Dialogs */}
-      <NodeSearchDialog
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-        nodes={graph.nodes}
-        onSelectNode={handleSearchSelect}
-      />
+      <NodeSearchDialog open={searchOpen} onOpenChange={setSearchOpen} nodes={graph.nodes} onSelectNode={handleSearchSelect} />
       <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
-      {/* Stats Sheet */}
       <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
         <SheetContent side="right" className="w-[320px] p-0">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle className="text-sm">Graph Overview</SheetTitle>
-          </SheetHeader>
+          <SheetHeader className="p-4 border-b"><SheetTitle className="text-sm">Graph Overview</SheetTitle></SheetHeader>
           <GraphStatsPanel graph={graph} />
         </SheetContent>
       </Sheet>
