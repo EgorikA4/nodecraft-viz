@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Search, Plus, Trash2, LayoutGrid, Copy } from 'lucide-react';
+import { Search, Plus, Trash2, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GraphDocument } from '@/types/graph';
 import { formatDistanceToNow } from 'date-fns';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GraphExplorerProps {
   graphs: GraphDocument[];
@@ -13,14 +12,15 @@ interface GraphExplorerProps {
   onSelectGraph: (id: string) => void;
   onCreateGraph: () => void;
   onDeleteGraph: (id: string) => void;
+  mobile?: boolean;
 }
 
-export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGraph, onDeleteGraph }: GraphExplorerProps) {
+export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGraph, onDeleteGraph, mobile }: GraphExplorerProps) {
   const [search, setSearch] = useState('');
   const filtered = graphs.filter(g => g.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="w-[280px] h-full flex flex-col border-r border-border bg-card shrink-0">
+    <div className={`h-full flex flex-col bg-card shrink-0 ${mobile ? 'w-full' : 'w-[280px] border-r border-border'}`}>
       {/* Header */}
       <div className="p-4 pb-3 border-b border-border">
         <div className="flex items-center gap-2 mb-4">
@@ -35,10 +35,10 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
             placeholder="Search graphs..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-8 h-8 text-sm bg-muted/50 border-0"
+            className="pl-8 h-9 text-sm bg-muted/50 border-0"
           />
         </div>
-        <Button onClick={onCreateGraph} size="sm" className="w-full gap-1.5 h-8">
+        <Button onClick={onCreateGraph} size="sm" className="w-full gap-1.5 h-9">
           <Plus size={14} />
           New Graph
         </Button>
@@ -85,12 +85,12 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
                     </span>
                   </div>
                 </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                <div className={`${mobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity flex items-center gap-0.5`}>
                   <button
                     onClick={e => { e.stopPropagation(); onDeleteGraph(g.id); }}
-                    className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                    className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -100,11 +100,13 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
       </ScrollArea>
 
       {/* Footer hint */}
-      <div className="p-3 border-t border-border">
-        <p className="text-[10px] text-muted-foreground/50 text-center">
-          Press <kbd className="px-1 py-0.5 rounded border bg-muted text-[9px]">?</kbd> for shortcuts
-        </p>
-      </div>
+      {!mobile && (
+        <div className="p-3 border-t border-border">
+          <p className="text-[10px] text-muted-foreground/50 text-center">
+            Press <kbd className="px-1 py-0.5 rounded border bg-muted text-[9px]">?</kbd> for shortcuts
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ interface InspectorPanelProps {
   onUpdateEdge: (edge: GraphEdge) => void;
   onDeleteEdge: (id: string) => void;
   onDuplicateNode: (node: GraphNode) => void;
+  mobile?: boolean;
 }
 
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
@@ -96,11 +97,11 @@ function NodeBreadcrumb({ node, nodes }: { node: GraphNode; nodes: GraphNode[] }
 
 export function InspectorPanel({
   selectedNode, selectedEdge, nodes,
-  onUpdateNode, onDeleteNode, onUpdateEdge, onDeleteEdge, onDuplicateNode,
+  onUpdateNode, onDeleteNode, onUpdateEdge, onDeleteEdge, onDuplicateNode, mobile,
 }: InspectorPanelProps) {
   if (!selectedNode && !selectedEdge) {
     return (
-      <div className="w-[300px] h-full flex flex-col items-center justify-center border-l border-border bg-card shrink-0 p-6">
+      <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col items-center justify-center bg-card shrink-0 p-6`}>
         <Info size={32} className="text-muted-foreground/30 mb-3" />
         <p className="text-sm text-muted-foreground text-center">Select a node or edge to inspect its properties</p>
         <p className="text-xs text-muted-foreground/50 mt-2 text-center">Click any element on the canvas, or use <kbd className="px-1 py-0.5 rounded border bg-muted text-[10px]">⌘K</kbd> to search</p>
@@ -112,7 +113,7 @@ export function InspectorPanel({
     const sourceNode = nodes.find(n => n.id === selectedEdge.source);
     const targetNode = nodes.find(n => n.id === selectedEdge.target);
     return (
-      <div className="w-[300px] h-full flex flex-col border-l border-border bg-card shrink-0">
+      <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col bg-card shrink-0`}>
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">Edge Inspector</h3>
         </div>
@@ -177,7 +178,7 @@ export function InspectorPanel({
   };
 
   return (
-    <div className="w-[300px] h-full flex flex-col border-l border-border bg-card shrink-0">
+    <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col bg-card shrink-0`}>
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
           <span
