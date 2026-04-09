@@ -1,5 +1,5 @@
 import { type EdgeProps, getBezierPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
-import type { RelationType } from '@/types/graph';
+import { RELATION_TYPE_LABELS_RU, type RelationType } from '@/types/graph';
 
 const RELATION_COLORS: Record<string, string> = {
   HAS_UNIT: '#0ea5e9',
@@ -47,7 +47,7 @@ export function LabeledEdge({
             selected ? 'shadow-md ring-1' : 'shadow-sm'
           }`}
         >
-          <span style={{ color }}>{relationType.replace(/_/g, ' ')}</span>
+          <span style={{ color }}>{RELATION_TYPE_LABELS_RU[relationType]}</span>
         </div>
       </EdgeLabelRenderer>
     </>

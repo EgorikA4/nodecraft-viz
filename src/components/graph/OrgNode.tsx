@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Building2, Network, Briefcase, User, Key } from 'lucide-react';
-import { NODE_TYPE_CONFIG, type NodeType } from '@/types/graph';
+import { NODE_TYPE_CONFIG, NODE_TYPE_LABELS_RU, type NodeType } from '@/types/graph';
 
 const iconMap: Record<NodeType, React.ElementType> = {
   Organization: Building2,
@@ -55,7 +55,7 @@ function OrgNodeComponent({ data, selected }: NodeProps) {
             className="text-[10px] font-semibold uppercase tracking-wider"
             style={{ color: config.color }}
           >
-            {nodeType}
+            {NODE_TYPE_LABELS_RU[nodeType]}
           </span>
           <span className="text-sm font-semibold text-foreground truncate">
             {data.label as string}

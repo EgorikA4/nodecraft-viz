@@ -75,9 +75,30 @@ export const NODE_TYPE_CONFIG: Record<NodeType, { color: string; bgClass: string
   Account: { color: 'hsl(215, 15%, 55%)', bgClass: 'bg-slate-50', borderClass: 'border-slate-300', icon: 'Key' },
 };
 
+export const NODE_TYPE_LABELS_RU: Record<NodeType, string> = {
+  Organization: 'Организация',
+  OrgUnit: 'Подразделение',
+  Position: 'Должность',
+  Person: 'Сотрудник',
+  Account: 'Аккаунт',
+};
+
 export const RELATION_TYPES: RelationType[] = [
   'HAS_UNIT', 'PARENT_OF', 'HAS_POSITION', 'OCCUPIED_BY',
   'HAS_ACCOUNT', 'REPORTS_TO', 'MEMBER_OF', 'OWNS', 'MANAGES', 'CUSTOM',
 ];
+
+export const RELATION_TYPE_LABELS_RU: Record<RelationType, string> = {
+  HAS_UNIT: 'Имеет подразделение',
+  PARENT_OF: 'Родитель для',
+  HAS_POSITION: 'Имеет должность',
+  OCCUPIED_BY: 'Занята сотрудником',
+  HAS_ACCOUNT: 'Имеет аккаунт',
+  REPORTS_TO: 'Подчиняется',
+  MEMBER_OF: 'Состоит в',
+  OWNS: 'Владеет',
+  MANAGES: 'Управляет',
+  CUSTOM: 'Пользовательская связь',
+};
 
 export const NODE_TYPES: NodeType[] = ['Organization', 'OrgUnit', 'Position', 'Person', 'Account'];

@@ -1,5 +1,5 @@
 
-import { GraphNode, GraphEdge, NODE_TYPE_CONFIG, RELATION_TYPES, NodeType } from '@/types/graph';
+import { GraphNode, GraphEdge, NODE_TYPE_CONFIG, NODE_TYPE_LABELS_RU, RELATION_TYPES, RELATION_TYPE_LABELS_RU, NodeType } from '@/types/graph';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -103,7 +103,7 @@ export function InspectorPanel({
                   <span className="font-medium text-foreground">Исходящая:</span>
                   {sourceNode && (
                     <Badge variant="outline" className="text-[10px] h-5" style={{ borderColor: NODE_TYPE_CONFIG[sourceNode.type].color }}>
-                      {sourceNode.type}
+                      {NODE_TYPE_LABELS_RU[sourceNode.type]}
                     </Badge>
                   )}
                   <span>{sourceNode?.label || selectedEdge.source}</span>
@@ -112,7 +112,7 @@ export function InspectorPanel({
                   <span className="font-medium text-foreground">Входящая:</span>
                   {targetNode && (
                     <Badge variant="outline" className="text-[10px] h-5" style={{ borderColor: NODE_TYPE_CONFIG[targetNode.type].color }}>
-                      {targetNode.type}
+                      {NODE_TYPE_LABELS_RU[targetNode.type]}
                     </Badge>
                   )}
                   <span>{targetNode?.label || selectedEdge.target}</span>
@@ -128,7 +128,7 @@ export function InspectorPanel({
                 <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {RELATION_TYPES.map(r => (
-                    <SelectItem key={r} value={r}>{r.replace(/_/g, ' ')}</SelectItem>
+                    <SelectItem key={r} value={r}>{RELATION_TYPE_LABELS_RU[r]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -173,7 +173,7 @@ export function InspectorPanel({
 
           <Separator />
 
-          <FieldGroup label={`Данные ${selectedNode.type}`}>
+          <FieldGroup label={`Данные ${NODE_TYPE_LABELS_RU[selectedNode.type]}`}>
             {fields.map(f => (
               <Field
                 key={f.key}

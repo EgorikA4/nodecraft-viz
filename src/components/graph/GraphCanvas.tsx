@@ -28,14 +28,8 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { nodeTypes } from './OrgNode';
 import { edgeTypes } from './LabeledEdge';
-import { GraphDocument, GraphNode, GraphEdge, NODE_TYPES, NodeType, NODE_TYPE_CONFIG } from '@/types/graph';
+import { GraphDocument, GraphNode, GraphEdge, NODE_TYPES, NodeType, NODE_TYPE_CONFIG, NODE_TYPE_LABELS_RU } from '@/types/graph';
 import { createNode, createEdge } from '@/store/graph-store';
-import { NodeSearchDialog } from './NodeSearchDialog';
-import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
-import { GraphStatsPanel } from './GraphStatsPanel';
-import { FilterBar } from './FilterBar';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface GraphCanvasProps {
   graph: GraphDocument | null;
@@ -91,7 +85,6 @@ function InnerCanvas({
   onExport, onImport, onDuplicateGraph, saveStatus, mobile,
 }: GraphCanvasProps) {
   const [editingTitle, setEditingTitle] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [hiddenTypes, setHiddenTypes] = useState<Set<NodeType>>(new Set());
   const graphRef = useRef(graph?.id);
   const reactFlowInstance = useReactFlow();
@@ -187,12 +180,6 @@ function InnerCanvas({
     });
   }, []);
 
-  const handleSearchSelect = useCallback((node: GraphNode) => {
-    onNodeSelect(node);
-    onEdgeSelect(null);
-    reactFlowInstance.setCenter(node.position.x, node.position.y, { zoom: 1.2, duration: 400 });
-  }, [reactFlowInstance, onNodeSelect, onEdgeSelect]);
-
   const handleFitView = useCallback(() => {
     reactFlowInstance.fitView({ duration: 400, padding: 0.2 });
   }, [reactFlowInstance]);
@@ -260,7 +247,7 @@ function InnerCanvas({
             {NODE_TYPES.map(t => (
               <DropdownMenuItem key={t} onClick={() => handleAddNode(t)}>
                 <span className="w-2 h-2 rounded-full mr-2" style={{ background: NODE_TYPE_CONFIG[t].color }} />
-                {t}
+                {NODE_TYPE_LABELS_RU[t]}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -327,24 +314,6 @@ function InnerCanvas({
         </ReactFlow>
       </div>
 
-      {/* Dialogs */}
-      <NodeSearchDialog
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-        nodes={graph.nodes}
-        onSelectNode={handleSearchSelect}
-      />
-      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-
-      {/* Stats Sheet */}
-      <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
-        <SheetContent side="right" className="w-[320px] p-0">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle className="text-sm">Graph Overview</SheetTitle>
-          </SheetHeader>
-          <GraphStatsPanel graph={graph} />
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
