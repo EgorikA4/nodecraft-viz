@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, Plus, Trash2, LayoutGrid } from 'lucide-react';
+import { Search, Plus, Trash2, LayoutGrid, Copy } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GraphDocument } from '@/types/graph';
 import { formatDistanceToNow } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GraphExplorerProps {
   graphs: GraphDocument[];
@@ -49,8 +50,12 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
           {filtered.length === 0 && (
             <div className="text-center py-8 px-4">
               <LayoutGrid size={32} className="mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-sm text-muted-foreground">No graphs yet</p>
-              <p className="text-xs text-muted-foreground/60">Create one to get started</p>
+              <p className="text-sm text-muted-foreground">
+                {search ? 'No matching graphs' : 'No graphs yet'}
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                {search ? 'Try a different search term' : 'Create one to get started'}
+              </p>
             </div>
           )}
           {filtered.map(g => (
@@ -74,18 +79,32 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
                       {formatDistanceToNow(new Date(g.updatedAt), { addSuffix: true })}
                     </span>
                   </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] text-muted-foreground/60">
+                      {g.nodes.length} nodes · {g.edges.length} edges
+                    </span>
+                  </div>
                 </div>
-                <button
-                  onClick={e => { e.stopPropagation(); onDeleteGraph(g.id); }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 size={13} />
-                </button>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                  <button
+                    onClick={e => { e.stopPropagation(); onDeleteGraph(g.id); }}
+                    className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
             </button>
           ))}
         </div>
       </ScrollArea>
+
+      {/* Footer hint */}
+      <div className="p-3 border-t border-border">
+        <p className="text-[10px] text-muted-foreground/50 text-center">
+          Press <kbd className="px-1 py-0.5 rounded border bg-muted text-[9px]">?</kbd> for shortcuts
+        </p>
+      </div>
     </div>
   );
 }
