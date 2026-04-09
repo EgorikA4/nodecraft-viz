@@ -1,16 +1,48 @@
 import { GraphDocument, GraphNode, GraphEdge, NodeType, RelationType } from '@/types/graph';
 import { demoGraphs } from '@/data/demo-graphs';
+import { buildPositionsFromEdges, needsAutoLayout } from '@/utils/graph-layout';
 
 const STORAGE_KEY = 'orggraph_graphs';
+
+function isValidEdge(edge: GraphEdge, nodeIds: Set<string>): boolean {
+  return !!edge.id && !!edge.source && !!edge.target && nodeIds.has(edge.source) && nodeIds.has(edge.target);
+}
+
+export function normalizeGraphDocument(graph: GraphDocument): GraphDocument {
+  const nodeIds = new Set(graph.nodes.map((node) => node.id));
+  const edges = graph.edges.filter((edge) => isValidEdge(edge, nodeIds));
+
+  if (!needsAutoLayout(graph.nodes)) {
+    return { ...graph, edges };
+  }
+
+  const positions = buildPositionsFromEdges(graph.nodes, edges);
+  const nodes = graph.nodes.map((node) => ({
+    ...node,
+    position: Number.isFinite(node.position?.x) && Number.isFinite(node.position?.y)
+      ? node.position
+      : positions.get(node.id) ?? { x: 100, y: 100 },
+  }));
+
+  return {
+    ...graph,
+    nodes,
+    edges,
+  };
+}
 
 export function loadGraphs(): GraphDocument[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw) as GraphDocument[];
+      return parsed.map(normalizeGraphDocument);
+    }
   } catch {}
   // First launch: seed demo data
-  saveGraphs(demoGraphs);
-  return demoGraphs;
+  const seeded = demoGraphs.map(normalizeGraphDocument);
+  saveGraphs(seeded);
+  return seeded;
 }
 
 export function saveGraphs(graphs: GraphDocument[]) {

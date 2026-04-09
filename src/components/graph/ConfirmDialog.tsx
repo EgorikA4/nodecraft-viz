@@ -27,12 +27,12 @@ export function ConfirmDialog({ open, onOpenChange, title, description, onConfir
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Отменить</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className={destructive ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
           >
-            Confirm
+            Подтвердить
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

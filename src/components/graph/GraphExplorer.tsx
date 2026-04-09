@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Trash2, LayoutGrid } from 'lucide-react';
+import { Search, Plus, Trash2, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,12 +28,12 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <LayoutGrid size={16} className="text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-foreground tracking-tight">OrgGraph</span>
+          <span className="text-lg font-bold text-foreground tracking-tight">Nodexis</span>
         </div>
         <div className="relative mb-3">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search graphs..."
+            placeholder="Найти граф"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-8 h-9 text-sm bg-muted/50 border-0"
@@ -40,7 +41,7 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
         </div>
         <Button onClick={onCreateGraph} size="sm" className="w-full gap-1.5 h-9">
           <Plus size={14} />
-          New Graph
+          Новый граф
         </Button>
       </div>
 
@@ -51,10 +52,10 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
             <div className="text-center py-8 px-4">
               <LayoutGrid size={32} className="mx-auto text-muted-foreground/40 mb-2" />
               <p className="text-sm text-muted-foreground">
-                {search ? 'No matching graphs' : 'No graphs yet'}
+                {search ? 'Нет совпадающих графов' : 'Нет графов'}
               </p>
               <p className="text-xs text-muted-foreground/60">
-                {search ? 'Try a different search term' : 'Create one to get started'}
+                {search ? 'Попробуйте другой поисковый запрос' : 'Создайте граф для начала'}
               </p>
             </div>
           )}
@@ -76,12 +77,13 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
                       v{g.version}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
+                      {/* TODO: Add localization */}
                       {formatDistanceToNow(new Date(g.updatedAt), { addSuffix: true })}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className="text-[10px] text-muted-foreground/60">
-                      {g.nodes.length} nodes · {g.edges.length} edges
+                      {g.nodes.length} вершин · {g.edges.length} связей
                     </span>
                   </div>
                 </div>
@@ -99,14 +101,6 @@ export function GraphExplorer({ graphs, activeGraphId, onSelectGraph, onCreateGr
         </div>
       </ScrollArea>
 
-      {/* Footer hint */}
-      {!mobile && (
-        <div className="p-3 border-t border-border">
-          <p className="text-[10px] text-muted-foreground/50 text-center">
-            Press <kbd className="px-1 py-0.5 rounded border bg-muted text-[9px]">?</kbd> for shortcuts
-          </p>
-        </div>
-      )}
     </div>
   );
 }

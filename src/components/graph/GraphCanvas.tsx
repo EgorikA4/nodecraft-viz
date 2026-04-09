@@ -16,9 +16,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
-  Save, Plus, LayoutDashboard, ChevronDown, Search,
-  Download, Upload, Copy, Undo2, Redo2, BarChart3, Keyboard, 
-  CheckCircle2, Loader2, MoreHorizontal,
+  Save, Plus, GitBranch, LayoutDashboard, ChevronDown, Search,
+  Download, Upload, Copy, Undo2, Redo2, BarChart3, Keyboard, Filter,
+  CheckCircle2, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,7 +34,8 @@ import { NodeSearchDialog } from './NodeSearchDialog';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { GraphStatsPanel } from './GraphStatsPanel';
 import { FilterBar } from './FilterBar';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface GraphCanvasProps {
   graph: GraphDocument | null;
@@ -85,15 +86,12 @@ function graphEdgesToFlow(edges: GraphEdge[], hiddenNodeIds: Set<string>): Edge[
 
 function InnerCanvas({
   graph, hasUnsavedChanges, onGraphChange, onSave, onTitleChange,
-  onNodeSelect, onEdgeSelect, selectedNodeId, selectedEdgeId,
-  onDuplicateNode, onDeleteNode,
+  onNodeSelect, onEdgeSelect,
   canUndo, canRedo, onUndo, onRedo,
   onExport, onImport, onDuplicateGraph, saveStatus, mobile,
 }: GraphCanvasProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [statsOpen, setStatsOpen] = useState(false);
   const [hiddenTypes, setHiddenTypes] = useState<Set<NodeType>>(new Set());
   const graphRef = useRef(graph?.id);
   const reactFlowInstance = useReactFlow();
@@ -122,17 +120,13 @@ function InnerCanvas({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
-      if (meta && e.key === 'k') { e.preventDefault(); setSearchOpen(true); }
       if (meta && e.key === 's') { e.preventDefault(); onSave(); }
       if (meta && !e.shiftKey && e.key === 'z') { e.preventDefault(); onUndo(); }
-      if (meta && e.shiftKey && e.key === 'z') { e.preventDefault(); onRedo(); }
-      if (meta && e.key === 'e') { e.preventDefault(); onExport(); }
-      if (meta && e.key === 'i') { e.preventDefault(); onImport(); }
-      if (e.key === '?' && !meta) { setShortcutsOpen(true); }
+      if (meta && !e.shiftKey && e.key === 'y') { e.preventDefault(); onRedo(); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onSave, onUndo, onRedo, onExport, onImport]);
+  }, [onSave, onUndo, onRedo]);
 
   const onConnect = useCallback((connection: Connection) => {
     const newEdge = createEdge(connection.source!, connection.target!, 'CUSTOM');
@@ -207,126 +201,8 @@ function InnerCanvas({
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 px-6">
         <LayoutDashboard size={56} className="text-muted-foreground/20 mb-4" />
-        <h2 className="text-xl font-semibold text-muted-foreground/60 mb-1 text-center">No graph selected</h2>
-        <p className="text-sm text-muted-foreground/40 mb-4 text-center">Select or create a graph to begin editing</p>
-        {!mobile && (
-          <p className="text-xs text-muted-foreground/30">Press <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">?</kbd> for keyboard shortcuts</p>
-        )}
-      </div>
-    );
-  }
-
-  // Mobile toolbar
-  if (mobile) {
-    return (
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Compact mobile toolbar */}
-        <div className="h-11 border-b border-border bg-card flex items-center px-12 gap-1 shrink-0">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {editingTitle ? (
-              <Input autoFocus defaultValue={graph.title}
-                className="h-7 text-sm font-semibold w-36"
-                onBlur={e => { onTitleChange(e.target.value); setEditingTitle(false); }}
-                onKeyDown={e => { if (e.key === 'Enter') { onTitleChange((e.target as HTMLInputElement).value); setEditingTitle(false); } }}
-              />
-            ) : (
-              <button onClick={() => setEditingTitle(true)} className="text-sm font-semibold text-foreground truncate max-w-[140px]">
-                {graph.title}
-              </button>
-            )}
-            {hasUnsavedChanges && <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />}
-            {saveStatus === 'saving' && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
-            {saveStatus === 'saved' && <CheckCircle2 size={12} className="text-emerald-500" />}
-          </div>
-
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onSave}>
-            <Save size={15} />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Plus size={15} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {NODE_TYPES.map(t => (
-                <DropdownMenuItem key={t} onClick={() => handleAddNode(t)}>
-                  <span className="w-2 h-2 rounded-full mr-2" style={{ background: NODE_TYPE_CONFIG[t].color }} />
-                  {t}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFitView}>
-            <LayoutDashboard size={15} />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal size={15} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSearchOpen(true)} className="gap-2">
-                <Search size={14} /> Search Nodes
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onUndo} disabled={!canUndo} className="gap-2">
-                <Undo2 size={14} /> Undo
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onRedo} disabled={!canRedo} className="gap-2">
-                <Redo2 size={14} /> Redo
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onExport} className="gap-2">
-                <Download size={14} /> Export
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onImport} className="gap-2">
-                <Upload size={14} /> Import
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDuplicateGraph} className="gap-2">
-                <Copy size={14} /> Duplicate Graph
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatsOpen(true)} className="gap-2">
-                <BarChart3 size={14} /> Statistics
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onEdgeClick={onEdgeClick}
-            onPaneClick={onPaneClick}
-            onNodeDragStop={onNodeDragStop}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            fitView
-            proOptions={{ hideAttribution: true }}
-            className="bg-muted/20"
-          >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-40" />
-            <Controls className="!rounded-lg !border !border-border !shadow-sm" showInteractive={false} />
-          </ReactFlow>
-        </div>
-
-        <NodeSearchDialog open={searchOpen} onOpenChange={setSearchOpen} nodes={graph.nodes} onSelectNode={handleSearchSelect} />
-        <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
-          <SheetContent side="bottom" className="h-[60vh] p-0 rounded-t-2xl">
-            <SheetHeader className="p-4 border-b"><SheetTitle className="text-sm">Graph Overview</SheetTitle></SheetHeader>
-            <GraphStatsPanel graph={graph} />
-          </SheetContent>
-        </Sheet>
+        <h2 className="text-xl font-semibold text-muted-foreground/60 mb-1">Граф не выбран</h2>
+        <p className="text-sm text-muted-foreground/40 mb-4">Выберите или создайте граф для начала редактирования</p>
       </div>
     );
   }
@@ -356,28 +232,28 @@ function InnerCanvas({
 
         <Tooltip><TooltipTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs" onClick={onSave}>
-            <Save size={14} /> Save
+            <Save size={14} /> Сохранить
           </Button>
-        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">⌘S</TooltipContent></Tooltip>
+        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Ctrl+S</TooltipContent></Tooltip>
 
         <Tooltip><TooltipTrigger asChild>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onUndo} disabled={!canUndo}>
             <Undo2 size={14} />
           </Button>
-        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Undo ⌘Z</TooltipContent></Tooltip>
+        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Отменить</TooltipContent></Tooltip>
 
         <Tooltip><TooltipTrigger asChild>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onRedo} disabled={!canRedo}>
             <Redo2 size={14} />
           </Button>
-        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Redo ⌘⇧Z</TooltipContent></Tooltip>
+        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Вернуть</TooltipContent></Tooltip>
 
         <div className="h-5 w-px bg-border" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs">
-              <Plus size={14} /> Add Node <ChevronDown size={12} />
+              <Plus size={14} /> Добавить вершину <ChevronDown size={12} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -392,46 +268,29 @@ function InnerCanvas({
 
         <div className="h-5 w-px bg-border" />
 
-        <FilterBar hiddenTypes={hiddenTypes} onToggleType={handleToggleType} />
-
-        <div className="h-5 w-px bg-border" />
-
-        <Tooltip><TooltipTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSearchOpen(true)}>
-            <Search size={14} />
-          </Button>
-        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Search ⌘K</TooltipContent></Tooltip>
-
         <Tooltip><TooltipTrigger asChild>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={handleFitView}>
             <LayoutDashboard size={14} />
           </Button>
-        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Fit View</TooltipContent></Tooltip>
+        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">Фит</TooltipContent></Tooltip>
 
         <div className="ml-auto flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5">
-                <ChevronDown size={12} /> More
+                <ChevronDown size={12} /> Ещё
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onExport} className="gap-2">
-                <Download size={14} /> Export JSON
+                <Download size={14} /> Экспорт JSON
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onImport} className="gap-2">
-                <Upload size={14} /> Import JSON
+                <Upload size={14} /> Импорт JSON
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDuplicateGraph} className="gap-2">
-                <Copy size={14} /> Duplicate Graph
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setStatsOpen(true)} className="gap-2">
-                <BarChart3 size={14} /> Graph Statistics
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShortcutsOpen(true)} className="gap-2">
-                <Keyboard size={14} /> Keyboard Shortcuts
+                <Copy size={14} /> Дублировать граф
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -468,12 +327,21 @@ function InnerCanvas({
         </ReactFlow>
       </div>
 
-      <NodeSearchDialog open={searchOpen} onOpenChange={setSearchOpen} nodes={graph.nodes} onSelectNode={handleSearchSelect} />
+      {/* Dialogs */}
+      <NodeSearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        nodes={graph.nodes}
+        onSelectNode={handleSearchSelect}
+      />
       <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
+      {/* Stats Sheet */}
       <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
         <SheetContent side="right" className="w-[320px] p-0">
-          <SheetHeader className="p-4 border-b"><SheetTitle className="text-sm">Graph Overview</SheetTitle></SheetHeader>
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="text-sm">Graph Overview</SheetTitle>
+          </SheetHeader>
           <GraphStatsPanel graph={graph} />
         </SheetContent>
       </Sheet>

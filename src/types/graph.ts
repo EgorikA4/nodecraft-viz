@@ -46,8 +46,6 @@ export interface GraphNode {
   type: NodeType;
   label: string;
   description?: string;
-  parentId?: string;
-  externalId?: string;
   data: NodeData;
   position: { x: number; y: number };
 }

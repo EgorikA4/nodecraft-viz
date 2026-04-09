@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { GraphNode, GraphEdge, NODE_TYPE_CONFIG, RELATION_TYPES, NodeType, NODE_TYPES } from '@/types/graph';
+
+import { GraphNode, GraphEdge, NODE_TYPE_CONFIG, RELATION_TYPES, NodeType } from '@/types/graph';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -73,28 +73,6 @@ const TYPE_FIELDS: Record<NodeType, { key: string; label: string; placeholder?: 
   ],
 };
 
-function NodeBreadcrumb({ node, nodes }: { node: GraphNode; nodes: GraphNode[] }) {
-  const path: GraphNode[] = [];
-  let current: GraphNode | undefined = node;
-  const visited = new Set<string>();
-  while (current && !visited.has(current.id)) {
-    visited.add(current.id);
-    path.unshift(current);
-    current = current.parentId ? nodes.find(n => n.id === current!.parentId) : undefined;
-  }
-  if (path.length <= 1) return null;
-  return (
-    <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground flex-wrap px-4 py-1.5 bg-muted/30 border-b border-border">
-      {path.map((n, i) => (
-        <span key={n.id} className="flex items-center gap-0.5">
-          {i > 0 && <ChevronRight size={10} />}
-          <span className={n.id === node.id ? 'font-semibold text-foreground' : ''}>{n.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function InspectorPanel({
   selectedNode, selectedEdge, nodes,
   onUpdateNode, onDeleteNode, onUpdateEdge, onDeleteEdge, onDuplicateNode, mobile,
@@ -103,8 +81,8 @@ export function InspectorPanel({
     return (
       <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col items-center justify-center bg-card shrink-0 p-6`}>
         <Info size={32} className="text-muted-foreground/30 mb-3" />
-        <p className="text-sm text-muted-foreground text-center">Select a node or edge to inspect its properties</p>
-        <p className="text-xs text-muted-foreground/50 mt-2 text-center">Click any element on the canvas, or use <kbd className="px-1 py-0.5 rounded border bg-muted text-[10px]">⌘K</kbd> to search</p>
+        <p className="text-sm text-muted-foreground text-center">Выберите вершину или связь для просмотра её свойств</p>
+        <p className="text-xs text-muted-foreground/50 mt-2 text-center">Нажмите на любой элемент на холсте</p>
       </div>
     );
   }
@@ -115,14 +93,14 @@ export function InspectorPanel({
     return (
       <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col bg-card shrink-0`}>
         <div className="p-4 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">Edge Inspector</h3>
+          <h3 className="text-sm font-semibold text-foreground">Описание связи</h3>
         </div>
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
-            <FieldGroup label="Connection">
+            <FieldGroup label="Связанные вершины">
               <div className="text-xs text-muted-foreground space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">Source:</span>
+                  <span className="font-medium text-foreground">Исходящая:</span>
                   {sourceNode && (
                     <Badge variant="outline" className="text-[10px] h-5" style={{ borderColor: NODE_TYPE_CONFIG[sourceNode.type].color }}>
                       {sourceNode.type}
@@ -131,7 +109,7 @@ export function InspectorPanel({
                   <span>{sourceNode?.label || selectedEdge.source}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">Target:</span>
+                  <span className="font-medium text-foreground">Входящая:</span>
                   {targetNode && (
                     <Badge variant="outline" className="text-[10px] h-5" style={{ borderColor: NODE_TYPE_CONFIG[targetNode.type].color }}>
                       {targetNode.type}
@@ -142,7 +120,7 @@ export function InspectorPanel({
               </div>
             </FieldGroup>
             <Separator />
-            <FieldGroup label="Relation Type">
+            <FieldGroup label="Тип соединения">
               <Select
                 value={selectedEdge.relationType}
                 onValueChange={v => onUpdateEdge({ ...selectedEdge, relationType: v as any })}
@@ -155,12 +133,8 @@ export function InspectorPanel({
                 </SelectContent>
               </Select>
             </FieldGroup>
-            <Separator />
-            <div className="text-xs text-muted-foreground">
-              <p className="font-mono">ID: {selectedEdge.id}</p>
-            </div>
             <Button variant="destructive" size="sm" className="w-full gap-1.5" onClick={() => onDeleteEdge(selectedEdge.id)}>
-              <Trash2 size={13} /> Delete Edge
+              <Trash2 size={13} /> Удалить связь
             </Button>
           </div>
         </ScrollArea>
@@ -180,51 +154,26 @@ export function InspectorPanel({
   return (
     <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col bg-card shrink-0`}>
       <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
-            style={{ background: `${config.color}15`, color: config.color }}
-          >
-            {selectedNode.type}
-          </span>
-          <h3 className="text-sm font-semibold text-foreground truncate flex-1">{selectedNode.label}</h3>
-        </div>
+        <h3 className="text-sm font-semibold text-foreground">Описание вершины</h3>
       </div>
-      <NodeBreadcrumb node={selectedNode} nodes={nodes} />
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          <FieldGroup label="Common Properties">
-            <Field label="Label" value={selectedNode.label} onChange={v => onUpdateNode({ ...selectedNode, label: v })} placeholder="Node display name" />
+          <FieldGroup label="Общие свойства">
+            <Field label="Название" value={selectedNode.label} onChange={v => onUpdateNode({ ...selectedNode, label: v })} placeholder="Название вершины" />
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Description</Label>
+              <Label className="text-xs text-muted-foreground">Описание</Label>
               <Textarea
                 value={selectedNode.description || ''}
                 onChange={e => onUpdateNode({ ...selectedNode, description: e.target.value })}
                 className="text-sm min-h-[60px] resize-none"
-                placeholder="Brief description of this node..."
+                placeholder="Краткое описание вершины"
               />
-            </div>
-            <Field label="External ID" value={selectedNode.externalId || ''} onChange={v => onUpdateNode({ ...selectedNode, externalId: v })} placeholder="e.g. ERP-12345" />
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Parent</Label>
-              <Select
-                value={selectedNode.parentId || '__none__'}
-                onValueChange={v => onUpdateNode({ ...selectedNode, parentId: v === '__none__' ? undefined : v })}
-              >
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="None" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
-                  {nodes.filter(n => n.id !== selectedNode.id).map(n => (
-                    <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </FieldGroup>
 
           <Separator />
 
-          <FieldGroup label={`${selectedNode.type} Fields`}>
+          <FieldGroup label={`Данные ${selectedNode.type}`}>
             {fields.map(f => (
               <Field
                 key={f.key}
@@ -236,20 +185,12 @@ export function InspectorPanel({
             ))}
           </FieldGroup>
 
-          <Separator />
-
-          <FieldGroup label="Metadata">
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>ID: <span className="font-mono">{selectedNode.id}</span></p>
-            </div>
-          </FieldGroup>
-
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => onDuplicateNode(selectedNode)}>
-              <Copy size={13} /> Duplicate
+              <Copy size={13} /> Дублировать
             </Button>
             <Button variant="destructive" size="sm" className="flex-1 gap-1.5" onClick={() => onDeleteNode(selectedNode.id)}>
-              <Trash2 size={13} /> Delete
+              <Trash2 size={13} /> Удалить
             </Button>
           </div>
         </div>

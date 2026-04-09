@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/graph/ConfirmDialog';
 import { GraphDocument, GraphNode, GraphEdge } from '@/types/graph';
 import {
   loadGraphs, saveGraph, saveGraphs, deleteGraph as deleteGraphFromStore,
-  createNewGraph, createNode,
+  createNewGraph, normalizeGraphDocument,
 } from '@/store/graph-store';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -37,7 +37,7 @@ const Index = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'graph' | 'node' | 'edge'; id: string; label: string } | null>(null);
 
   // Autosave
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Load working graph when active changes
   useEffect(() => {
@@ -279,7 +279,7 @@ const Index = () => {
           const data = JSON.parse(reader.result as string) as GraphDocument;
           if (!data.nodes || !data.edges || !data.title) throw new Error('Invalid');
           const imported: GraphDocument = {
-            ...data,
+            ...normalizeGraphDocument(data),
             id: `graph-${Date.now()}`,
             updatedAt: new Date().toISOString(),
           };
@@ -400,8 +400,8 @@ const Index = () => {
       <ConfirmDialog
         open={!!deleteConfirm}
         onOpenChange={(open) => !open && setDeleteConfirm(null)}
-        title={`Delete ${deleteConfirm?.type || ''}?`}
-        description={`Are you sure you want to delete "${deleteConfirm?.label}"? This action cannot be undone.`}
+        title={`Удалить ${deleteConfirm?.type === 'node' ? "вершину" : deleteConfirm?.type === 'edge' ? "связь" : "граф"}?`}
+        description={`Вы уверены, что хотите удалить "${deleteConfirm?.label}"?`}
         onConfirm={confirmDelete}
         destructive
       />

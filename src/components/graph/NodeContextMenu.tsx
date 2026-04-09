@@ -22,21 +22,21 @@ export function NodeContextMenu({ children, onDuplicate, onDelete, onFocus, onIn
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-48">
         <ContextMenuItem onClick={onInspect} className="gap-2">
-          <Info size={14} /> Inspect
+          <Info size={14} /> Просмотреть вершину
         </ContextMenuItem>
         <ContextMenuItem onClick={onFocus} className="gap-2">
-          <Focus size={14} /> Center on node
+          <Focus size={14} /> Центрировать на вершине
         </ContextMenuItem>
         <ContextMenuItem onClick={onAddEdgeFrom} className="gap-2">
-          <Link size={14} /> Add edge from here
+          <Link size={14} /> Добавить связь из вершины
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onDuplicate} className="gap-2">
-          <Copy size={14} /> Duplicate node
+          <Copy size={14} /> Дублировать вершину
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-destructive">
-          <Trash2 size={14} /> Delete node
+          <Trash2 size={14} /> Удалить вершину
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
