@@ -35,7 +35,7 @@ function OrgNodeComponent({ data, selected }: NodeProps) {
         ...(selected ? { '--tw-ring-color': config.color } as React.CSSProperties : {}),
       }}
     >
-      <Handle type="target" position={Position.Top} className="!w-2.5 !h-2.5 !border-2 !border-white" style={{ background: config.color }} />
+      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !border-2 !border-white !-top-1.5" style={{ background: config.color }} />
       <div className="flex items-start gap-2.5">
         <div
           className="flex items-center justify-center rounded-lg shrink-0"
@@ -67,7 +67,7 @@ function OrgNodeComponent({ data, selected }: NodeProps) {
           )}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="!w-2.5 !h-2.5 !border-2 !border-white" style={{ background: config.color }} />
+      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !border-2 !border-white !-bottom-1.5" style={{ background: config.color }} />
     </div>
   );
 }

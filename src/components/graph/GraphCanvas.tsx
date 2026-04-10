@@ -18,7 +18,7 @@ import '@xyflow/react/dist/style.css';
 import {
   Save, Plus, LayoutDashboard, ChevronDown, Search,
   Download, Upload, Copy, Undo2, Redo2, BarChart3, Keyboard, 
-  CheckCircle2, Loader2, MoreHorizontal,
+  CheckCircle2, Loader2, MoreHorizontal, Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -94,6 +94,7 @@ function InnerCanvas({
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [hiddenTypes, setHiddenTypes] = useState<Set<NodeType>>(new Set());
   const graphRef = useRef(graph?.id);
   const reactFlowInstance = useReactFlow();
@@ -206,9 +207,9 @@ function InnerCanvas({
   if (!graph) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 px-6">
-        <LayoutDashboard size={56} className="text-muted-foreground/20 mb-4" />
-        <h2 className="text-xl font-semibold text-muted-foreground/60 mb-1 text-center">No graph selected</h2>
-        <p className="text-sm text-muted-foreground/40 mb-4 text-center">Select or create a graph to begin editing</p>
+        <LayoutDashboard size={mobile ? 44 : 56} className="text-muted-foreground/20 mb-4" />
+        <h2 className={`${mobile ? 'text-lg' : 'text-xl'} font-semibold text-muted-foreground/60 mb-1 text-center`}>No graph selected</h2>
+        <p className={`${mobile ? 'text-xs' : 'text-sm'} text-muted-foreground/40 mb-4 text-center`}>Select or create a graph to begin editing</p>
         {!mobile && (
           <p className="text-xs text-muted-foreground/30">Press <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">?</kbd> for keyboard shortcuts</p>
         )}
@@ -221,16 +222,16 @@ function InnerCanvas({
     return (
       <div className="flex-1 flex flex-col min-w-0">
         {/* Compact mobile toolbar */}
-        <div className="h-11 border-b border-border bg-card flex items-center px-12 gap-1 shrink-0">
+        <div className="h-12 border-b border-border bg-card flex items-center pl-[88px] pr-2 gap-1 shrink-0 safe-area-top">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {editingTitle ? (
               <Input autoFocus defaultValue={graph.title}
-                className="h-7 text-sm font-semibold w-36"
+                className="h-9 text-sm font-semibold w-32"
                 onBlur={e => { onTitleChange(e.target.value); setEditingTitle(false); }}
                 onKeyDown={e => { if (e.key === 'Enter') { onTitleChange((e.target as HTMLInputElement).value); setEditingTitle(false); } }}
               />
             ) : (
-              <button onClick={() => setEditingTitle(true)} className="text-sm font-semibold text-foreground truncate max-w-[140px]">
+              <button onClick={() => setEditingTitle(true)} className="text-sm font-semibold text-foreground truncate max-w-[120px]">
                 {graph.title}
               </button>
             )}
@@ -239,66 +240,75 @@ function InnerCanvas({
             {saveStatus === 'saved' && <CheckCircle2 size={12} className="text-emerald-500" />}
           </div>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onSave}>
-            <Save size={15} />
+          <Button variant="ghost" size="icon" className="h-10 w-10 touch-target" onClick={onSave}>
+            <Save size={16} />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Plus size={15} />
+              <Button variant="ghost" size="icon" className="h-10 w-10 touch-target">
+                <Plus size={16} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               {NODE_TYPES.map(t => (
-                <DropdownMenuItem key={t} onClick={() => handleAddNode(t)}>
-                  <span className="w-2 h-2 rounded-full mr-2" style={{ background: NODE_TYPE_CONFIG[t].color }} />
+                <DropdownMenuItem key={t} onClick={() => handleAddNode(t)} className="h-10">
+                  <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ background: NODE_TYPE_CONFIG[t].color }} />
                   {t}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFitView}>
-            <LayoutDashboard size={15} />
+          <Button variant="ghost" size="icon" className="h-10 w-10 touch-target" onClick={handleFitView}>
+            <LayoutDashboard size={16} />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal size={15} />
+              <Button variant="ghost" size="icon" className="h-10 w-10 touch-target">
+                <MoreHorizontal size={16} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSearchOpen(true)} className="gap-2">
-                <Search size={14} /> Search Nodes
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => setSearchOpen(true)} className="gap-2 h-10">
+                <Search size={15} /> Search Nodes
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onUndo} disabled={!canUndo} className="gap-2">
-                <Undo2 size={14} /> Undo
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onRedo} disabled={!canRedo} className="gap-2">
-                <Redo2 size={14} /> Redo
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onExport} className="gap-2">
-                <Download size={14} /> Export
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onImport} className="gap-2">
-                <Upload size={14} /> Import
+              <DropdownMenuItem onClick={() => setFilterOpen(true)} className="gap-2 h-10">
+                <Filter size={15} /> Filter by Type
+                {hiddenTypes.size > 0 && (
+                  <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
+                    {hiddenTypes.size}
+                  </span>
+                )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDuplicateGraph} className="gap-2">
-                <Copy size={14} /> Duplicate Graph
+              <DropdownMenuItem onClick={onUndo} disabled={!canUndo} className="gap-2 h-10">
+                <Undo2 size={15} /> Undo
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatsOpen(true)} className="gap-2">
-                <BarChart3 size={14} /> Statistics
+              <DropdownMenuItem onClick={onRedo} disabled={!canRedo} className="gap-2 h-10">
+                <Redo2 size={15} /> Redo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onExport} className="gap-2 h-10">
+                <Download size={15} /> Export
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onImport} className="gap-2 h-10">
+                <Upload size={15} /> Import
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onDuplicateGraph} className="gap-2 h-10">
+                <Copy size={15} /> Duplicate Graph
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatsOpen(true)} className="gap-2 h-10">
+                <BarChart3 size={15} /> Statistics
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative touch-pan">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -312,17 +322,48 @@ function InnerCanvas({
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView
+            minZoom={0.15}
             proOptions={{ hideAttribution: true }}
             className="bg-muted/20"
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-40" />
-            <Controls className="!rounded-lg !border !border-border !shadow-sm" showInteractive={false} />
+            <Controls className="!rounded-lg !border !border-border !shadow-sm mobile-controls" showInteractive={false} />
           </ReactFlow>
         </div>
 
         <NodeSearchDialog open={searchOpen} onOpenChange={setSearchOpen} nodes={graph.nodes} onSelectNode={handleSearchSelect} />
+        
+        {/* Mobile filter sheet */}
+        <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+          <SheetContent side="bottom" className="h-auto max-h-[50vh] p-0 rounded-t-2xl">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mt-2" />
+            <SheetHeader className="p-4 pb-2"><SheetTitle className="text-sm">Filter Node Types</SheetTitle></SheetHeader>
+            <div className="px-4 pb-6 space-y-1">
+              {NODE_TYPES.map(type => {
+                const hidden = hiddenTypes.has(type);
+                return (
+                  <button
+                    key={type}
+                    onClick={() => handleToggleType(type)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                      hidden ? 'opacity-40' : 'bg-muted/40'
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ background: NODE_TYPE_CONFIG[type].color }} />
+                    <span className="text-sm font-medium text-foreground">{type}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {hidden ? 'Hidden' : 'Visible'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </SheetContent>
+        </Sheet>
+
         <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
           <SheetContent side="bottom" className="h-[60vh] p-0 rounded-t-2xl">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mt-2" />
             <SheetHeader className="p-4 border-b"><SheetTitle className="text-sm">Graph Overview</SheetTitle></SheetHeader>
             <GraphStatsPanel graph={graph} />
           </SheetContent>
