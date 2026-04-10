@@ -101,5 +101,49 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Touch-friendly controls */
+.touch-target {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.touch-pan {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+/* Safe area for notched devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* React Flow mobile controls - larger touch targets */
+.mobile-controls .react-flow__controls-button {
+  width: 36px;
+  height: 36px;
+}
+
+.mobile-controls .react-flow__controls-button svg {
+  max-width: 16px;
+  max-height: 16px;
+}
+
+/* Command dialog mobile fullscreen */
+@media (max-width: 640px) {
+  [cmdk-dialog] [cmdk-input] {
+    font-size: 16px !important;
+    height: 44px !important;
+  }
+
+  [cmdk-dialog] [cmdk-item] {
+    min-height: 44px !important;
+    padding: 8px 12px !important;
   }
 }

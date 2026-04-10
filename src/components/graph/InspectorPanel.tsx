@@ -22,20 +22,26 @@ interface InspectorPanelProps {
   mobile?: boolean;
 }
 
-function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldGroup({ label, children, mobile }: { label: string; children: React.ReactNode; mobile?: boolean }) {
   return (
-    <div className="space-y-2">
+    <div className={mobile ? 'space-y-3' : 'space-y-2'}>
       <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</h4>
-      <div className="space-y-2.5">{children}</div>
+      <div className={mobile ? 'space-y-3.5' : 'space-y-2.5'}>{children}</div>
     </div>
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+function Field({ label, value, onChange, placeholder, type = 'text', mobile }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; mobile?: boolean }) {
   return (
     <div className="space-y-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input value={value} onChange={e => onChange(e.target.value)} className="h-8 text-sm" type={type} placeholder={placeholder || `Enter ${label.toLowerCase()}...`} />
+      <Input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className={`${mobile ? 'h-10 text-base' : 'h-8 text-sm'}`}
+        type={type}
+        placeholder={placeholder || `Enter ${label.toLowerCase()}...`}
+      />
     </div>
   );
 }
@@ -102,9 +108,11 @@ export function InspectorPanel({
   if (!selectedNode && !selectedEdge) {
     return (
       <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col items-center justify-center bg-card shrink-0 p-6`}>
-        <Info size={32} className="text-muted-foreground/30 mb-3" />
-        <p className="text-sm text-muted-foreground text-center">Select a node or edge to inspect its properties</p>
-        <p className="text-xs text-muted-foreground/50 mt-2 text-center">Click any element on the canvas, or use <kbd className="px-1 py-0.5 rounded border bg-muted text-[10px]">⌘K</kbd> to search</p>
+        <Info size={mobile ? 28 : 32} className="text-muted-foreground/30 mb-3" />
+        <p className={`${mobile ? 'text-base' : 'text-sm'} text-muted-foreground text-center`}>Select a node or edge to inspect its properties</p>
+        {!mobile && (
+          <p className="text-xs text-muted-foreground/50 mt-2 text-center">Click any element on the canvas, or use <kbd className="px-1 py-0.5 rounded border bg-muted text-[10px]">⌘K</kbd> to search</p>
+        )}
       </div>
     );
   }
@@ -114,13 +122,14 @@ export function InspectorPanel({
     const targetNode = nodes.find(n => n.id === selectedEdge.target);
     return (
       <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col bg-card shrink-0`}>
-        <div className="p-4 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">Edge Inspector</h3>
+        <div className={`${mobile ? 'p-4 pt-2' : 'p-4'} border-b border-border`}>
+          {mobile && <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mb-3" />}
+          <h3 className={`${mobile ? 'text-base' : 'text-sm'} font-semibold text-foreground`}>Edge Inspector</h3>
         </div>
         <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            <FieldGroup label="Connection">
-              <div className="text-xs text-muted-foreground space-y-1.5">
+          <div className={`${mobile ? 'p-4 space-y-5' : 'p-4 space-y-4'}`}>
+            <FieldGroup label="Connection" mobile={mobile}>
+              <div className={`${mobile ? 'text-sm' : 'text-xs'} text-muted-foreground space-y-2`}>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground">Source:</span>
                   {sourceNode && (
@@ -142,25 +151,25 @@ export function InspectorPanel({
               </div>
             </FieldGroup>
             <Separator />
-            <FieldGroup label="Relation Type">
+            <FieldGroup label="Relation Type" mobile={mobile}>
               <Select
                 value={selectedEdge.relationType}
                 onValueChange={v => onUpdateEdge({ ...selectedEdge, relationType: v as any })}
               >
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                <SelectTrigger className={`${mobile ? 'h-10 text-base' : 'h-8 text-sm'}`}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {RELATION_TYPES.map(r => (
-                    <SelectItem key={r} value={r}>{r.replace(/_/g, ' ')}</SelectItem>
+                    <SelectItem key={r} value={r} className={mobile ? 'h-10' : ''}>{r.replace(/_/g, ' ')}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </FieldGroup>
             <Separator />
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground break-all">
               <p className="font-mono">ID: {selectedEdge.id}</p>
             </div>
-            <Button variant="destructive" size="sm" className="w-full gap-1.5" onClick={() => onDeleteEdge(selectedEdge.id)}>
-              <Trash2 size={13} /> Delete Edge
+            <Button variant="destructive" size={mobile ? 'default' : 'sm'} className={`w-full gap-1.5 ${mobile ? 'h-11' : ''}`} onClick={() => onDeleteEdge(selectedEdge.id)}>
+              <Trash2 size={mobile ? 15 : 13} /> Delete Edge
             </Button>
           </div>
         </ScrollArea>
@@ -179,7 +188,8 @@ export function InspectorPanel({
 
   return (
     <div className={`${mobile ? 'w-full' : 'w-[300px] border-l border-border'} h-full flex flex-col bg-card shrink-0`}>
-      <div className="p-4 border-b border-border">
+      <div className={`${mobile ? 'p-4 pt-2' : 'p-4'} border-b border-border`}>
+        {mobile && <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mb-3" />}
         <div className="flex items-center gap-2">
           <span
             className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
@@ -187,35 +197,35 @@ export function InspectorPanel({
           >
             {selectedNode.type}
           </span>
-          <h3 className="text-sm font-semibold text-foreground truncate flex-1">{selectedNode.label}</h3>
+          <h3 className={`${mobile ? 'text-base' : 'text-sm'} font-semibold text-foreground truncate flex-1`}>{selectedNode.label}</h3>
         </div>
       </div>
       <NodeBreadcrumb node={selectedNode} nodes={nodes} />
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          <FieldGroup label="Common Properties">
-            <Field label="Label" value={selectedNode.label} onChange={v => onUpdateNode({ ...selectedNode, label: v })} placeholder="Node display name" />
+        <div className={`${mobile ? 'p-4 space-y-5' : 'p-4 space-y-4'}`}>
+          <FieldGroup label="Common Properties" mobile={mobile}>
+            <Field label="Label" value={selectedNode.label} onChange={v => onUpdateNode({ ...selectedNode, label: v })} placeholder="Node display name" mobile={mobile} />
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Description</Label>
               <Textarea
                 value={selectedNode.description || ''}
                 onChange={e => onUpdateNode({ ...selectedNode, description: e.target.value })}
-                className="text-sm min-h-[60px] resize-none"
+                className={`${mobile ? 'text-base min-h-[80px]' : 'text-sm min-h-[60px]'} resize-none`}
                 placeholder="Brief description of this node..."
               />
             </div>
-            <Field label="External ID" value={selectedNode.externalId || ''} onChange={v => onUpdateNode({ ...selectedNode, externalId: v })} placeholder="e.g. ERP-12345" />
+            <Field label="External ID" value={selectedNode.externalId || ''} onChange={v => onUpdateNode({ ...selectedNode, externalId: v })} placeholder="e.g. ERP-12345" mobile={mobile} />
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Parent</Label>
               <Select
                 value={selectedNode.parentId || '__none__'}
                 onValueChange={v => onUpdateNode({ ...selectedNode, parentId: v === '__none__' ? undefined : v })}
               >
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger className={`${mobile ? 'h-10 text-base' : 'h-8 text-sm'}`}><SelectValue placeholder="None" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">None</SelectItem>
                   {nodes.filter(n => n.id !== selectedNode.id).map(n => (
-                    <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>
+                    <SelectItem key={n.id} value={n.id} className={mobile ? 'h-10' : ''}>{n.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -224,7 +234,7 @@ export function InspectorPanel({
 
           <Separator />
 
-          <FieldGroup label={`${selectedNode.type} Fields`}>
+          <FieldGroup label={`${selectedNode.type} Fields`} mobile={mobile}>
             {fields.map(f => (
               <Field
                 key={f.key}
@@ -232,24 +242,25 @@ export function InspectorPanel({
                 value={(selectedNode.data as any)[f.key] || ''}
                 onChange={v => updateData(f.key, v)}
                 placeholder={f.placeholder}
+                mobile={mobile}
               />
             ))}
           </FieldGroup>
 
           <Separator />
 
-          <FieldGroup label="Metadata">
-            <div className="text-xs text-muted-foreground space-y-1">
+          <FieldGroup label="Metadata" mobile={mobile}>
+            <div className="text-xs text-muted-foreground space-y-1 break-all">
               <p>ID: <span className="font-mono">{selectedNode.id}</span></p>
             </div>
           </FieldGroup>
 
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => onDuplicateNode(selectedNode)}>
-              <Copy size={13} /> Duplicate
+            <Button variant="outline" size={mobile ? 'default' : 'sm'} className={`flex-1 gap-1.5 ${mobile ? 'h-11' : ''}`} onClick={() => onDuplicateNode(selectedNode)}>
+              <Copy size={mobile ? 15 : 13} /> Duplicate
             </Button>
-            <Button variant="destructive" size="sm" className="flex-1 gap-1.5" onClick={() => onDeleteNode(selectedNode.id)}>
-              <Trash2 size={13} /> Delete
+            <Button variant="destructive" size={mobile ? 'default' : 'sm'} className={`flex-1 gap-1.5 ${mobile ? 'h-11' : ''}`} onClick={() => onDeleteNode(selectedNode.id)}>
+              <Trash2 size={mobile ? 15 : 13} /> Delete
             </Button>
           </div>
         </div>

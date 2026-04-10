@@ -331,23 +331,23 @@ const Index = () => {
 
       {/* Mobile: floating toggle buttons */}
       {isMobile && (
-        <div className="fixed top-2 left-2 z-50 flex gap-1.5">
+        <div className="fixed top-2 left-2 z-50 flex gap-1.5 safe-area-top">
           <Button
             variant="secondary"
             size="icon"
-            className="h-9 w-9 rounded-lg shadow-md bg-card border border-border"
+            className="h-10 w-10 rounded-xl shadow-md bg-card border border-border touch-target"
             onClick={() => setExplorerOpen(true)}
           >
-            <PanelLeft size={16} />
+            <PanelLeft size={18} />
           </Button>
           {(selectedNode || selectedEdge) && (
             <Button
               variant="secondary"
               size="icon"
-              className="h-9 w-9 rounded-lg shadow-md bg-card border border-border"
+              className="h-10 w-10 rounded-xl shadow-md bg-card border border-border touch-target"
               onClick={() => setInspectorOpen(true)}
             >
-              <PanelRight size={16} />
+              <PanelRight size={18} />
             </Button>
           )}
         </div>
@@ -382,7 +382,7 @@ const Index = () => {
       {/* Mobile: Explorer as left sheet */}
       {isMobile && (
         <Sheet open={explorerOpen} onOpenChange={setExplorerOpen}>
-          <SheetContent side="left" className="w-[300px] p-0">
+          <SheetContent side="left" className="w-[85vw] max-w-[320px] p-0">
             {explorerContent}
           </SheetContent>
         </Sheet>
@@ -391,7 +391,7 @@ const Index = () => {
       {/* Mobile: Inspector as bottom sheet */}
       {isMobile && (
         <Sheet open={inspectorOpen} onOpenChange={setInspectorOpen}>
-          <SheetContent side="bottom" className="h-[70vh] p-0 rounded-t-2xl">
+          <SheetContent side="bottom" className="h-[65vh] p-0 rounded-t-2xl overflow-hidden">
             {inspectorContent}
           </SheetContent>
         </Sheet>
