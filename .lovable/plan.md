@@ -1,73 +1,53 @@
 
-# OrgGraph — Organizational Graph Editor MVP
 
-## Overview
-A polished single-page graph editor for creating, editing, and managing organizational hierarchy graphs. Premium B2B SaaS aesthetic with three-panel layout.
+# Mobile Responsiveness Refinement
 
-## Layout Structure
-Three-panel layout with collapsible sidebars:
-- **Left sidebar (~280px)**: Graph explorer with logo, search, create button, and saved graph cards
-- **Center area (flex)**: Graph canvas with toolbar and inline-editable title
-- **Right sidebar (~320px)**: Context-sensitive inspector panel for selected node/edge
+## What's Already Done
+The app has basic mobile support: `useIsMobile()` hook, mobile prop passed to components, Sheet-based drawers for explorer/inspector, and a compact mobile toolbar. However, several areas need polish.
 
-## Left Sidebar — Graph Explorer
-- App logo "OrgGraph" with subtle icon at top
-- Search input with filter
-- "New Graph" primary button
-- List of graph cards showing: title, version badge, last updated timestamp
-- Active graph highlighted with accent border
-- Hover reveals quick-delete (trash icon)
-- Empty state with illustration when no graphs exist
-- Subtle scroll area
+## Changes
 
-## Center — Graph Canvas & Toolbar
-- **Toolbar bar** above canvas: Save, Add Node (dropdown by type), Add Edge, Auto-layout, Fit View buttons
-- **Graph title** inline-editable with "unsaved changes" dot indicator
-- **Canvas area** using React Flow for interactive node/edge rendering:
-  - Nodes as styled cards with type-specific colors and icons:
-    - **Organization**: Large blue card, Building2 icon
-    - **OrgUnit**: Medium teal card, Network icon
-    - **Position**: Medium purple card, Briefcase icon
-    - **Person**: Compact warm card, User icon
-    - **Account**: Small gray/technical card, Key icon
-  - Edges with labeled relation types, styled by type
-  - Pan, zoom, minimap, background grid
-  - Selected node/edge gets highlighted border
-- **Empty state**: Centered illustration + "Select or create a graph" message when nothing is open
+### 1. GraphCanvas.tsx — Mobile toolbar and canvas improvements
+- Add `FilterBar` access on mobile via the overflow menu (currently desktop-only)
+- Increase touch target sizes on mobile toolbar buttons from `h-8 w-8` to `h-10 w-10`
+- Add `minZoom={0.2}` and larger node drag threshold for touch
+- Move mobile toolbar padding to avoid conflicting with the floating nav buttons (currently `px-12` is a rough workaround)
+- Show Controls with larger touch-friendly buttons on mobile
 
-## Right Sidebar — Inspector Panel
-- **Node selected**: Type badge, common fields form (label, description, externalId, parentId), dynamic type-specific fields section, metadata section (id, timestamps), delete node button
-- **Edge selected**: Relation type dropdown, source/target display, delete edge button
-- **Nothing selected**: Helpful prompt text
-- Form styling inspired by Notion/Linear — clean inputs, grouped sections, subtle separators
+### 2. InspectorPanel.tsx — Mobile form improvements
+- Increase input heights from `h-8` to `h-10` on mobile for better tap targets
+- Add more vertical spacing between form sections on mobile
+- Make action buttons (Delete, Duplicate) larger on mobile
+- Ensure the bottom sheet scrolls smoothly with touch
 
-## Data & State Management
-- All state in React (useState/useReducer), no backend
-- Graphs persisted to localStorage for save/load/delete
-- Unsaved changes tracked by comparing current state vs last saved
-- Pre-populated with 3 realistic demo graphs; one auto-opened with ~8-10 nodes showing a believable org structure
+### 3. GraphExplorer.tsx — Mobile drawer polish
+- Increase graph card tap targets and spacing on mobile
+- Make search input and "New Graph" button taller on mobile
+- Always show delete button on mobile (no hover state on touch)
 
-## Demo Data
-Open graph "Acme Corp Structure" containing:
-- 1 Organization (Acme Corp)
-- 2 OrgUnits (Engineering, HR)
-- 3 Positions (CTO, Senior Engineer, HR Manager)
-- 2 Persons (John Doe, Jane Smith)
-- 1 Account (LDAP account)
-- Connected with appropriate relation types
+### 4. OrgNode.tsx — Touch-friendly nodes
+- Increase handle sizes slightly for easier edge connection on touch
+- Ensure minimum node dimensions work well at mobile zoom levels
 
-Two additional saved graphs in sidebar: "Beta Holdings Group", "Startup Inc Org"
+### 5. NodeSearchDialog.tsx — Mobile search
+- Ensure the command dialog is full-width on mobile with proper padding
+- Increase tap targets for search results on mobile
 
-## Design System
-- Light theme with soft gray background (`#f8f9fb`)
-- White floating panels with `rounded-xl`, soft `shadow-sm`
-- Color palette per node type (blue, teal, purple, amber, slate)
-- Inter-like typography, generous spacing
-- Subtle gradients on primary buttons
-- Minimal Lucide icons throughout
+### 6. Index.tsx — Layout adjustments
+- Ensure floating toggle buttons don't overlap the mobile toolbar
+- Add safe area padding for notched devices
+- Improve the inspector bottom sheet height to `60vh` with better handle styling
 
-## Tech
-- React Flow (`@xyflow/react`) for the graph canvas
-- Shadcn UI components for forms, buttons, dialogs
-- localStorage for persistence
-- Single page, no routing needed beyond index
+### 7. FilterBar.tsx — Mobile adaptation
+- Create a mobile-friendly version that renders as a scrollable row or sheet-based toggle list when accessed from the mobile overflow menu
+
+### 8. Global CSS (index.css)
+- Add touch-action utilities for better mobile scrolling
+- Ensure React Flow controls have adequate mobile sizing via CSS overrides
+
+## Technical Approach
+- Use the existing `mobile` prop pattern throughout
+- Conditionally apply larger sizing classes (`h-10` vs `h-8`, `p-4` vs `p-3`) based on `mobile` prop
+- No new dependencies needed
+- All changes are CSS/class-based responsive adjustments within existing component structure
+
